@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="15dp"
+    tools:context=".ExampleJQ">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFF"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="请求规则" />
+
+        <EditText
+            android:id="@+id/e_edit_collection"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="#FFF"
+            android:gravity="start"
+            android:hint="Collection v2.1 Json String"
+            android:textSize="8sp" />
+
+        <Button
+            android:id="@+id/e_btn_callrun"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="发送请求测试" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="5dp"
+            android:text="请求回调"
+           />
+
+        <EditText
+            android:id="@+id/e_edit_callback"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="#FFF"
+            android:enabled="false"
+            android:gravity="start"
+            android:hint="Call Back…"
+            android:textSize="8sp"
+            android:padding="10dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="#FFF"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="数据解析规则" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="#FFF"
+            android:gravity="start"
+            android:hint="Json String"
+            android:textSize="10sp" />
+
+    </LinearLayout>
+
+
+</LinearLayout>
