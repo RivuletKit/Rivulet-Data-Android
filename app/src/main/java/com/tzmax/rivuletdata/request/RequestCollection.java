@@ -4,7 +4,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class RequestCollection {
 
@@ -152,7 +155,8 @@ public class RequestCollection {
 
     static class Url {
         String raw, protocol, port;
-        ArrayList<String> host, path;
+        ArrayList<String> host;
+        ArrayList<String> path;
         ArrayList<Query> querys;
 
         // 通过 JSONObject 解析出 Url 对象
@@ -172,10 +176,11 @@ public class RequestCollection {
             this.path = new ArrayList<>();
             JSONArray paths = jsonObj.getJSONArray("path");
             for (int i = 0; i < paths.length(); i++) {
-                String item = hosts.getString(i);
+                String item = paths.getString(i);
                 this.path.add(item);
             }
 
+            // 处理 query 参数
             this.querys = new ArrayList<>();
             JSONArray queryArray = jsonObj.getJSONArray("query");
             for (int i = 0; i < queryArray.length(); i++) {
@@ -183,9 +188,104 @@ public class RequestCollection {
 
                 String itemKeyStr = item.isNull("key") ? "" : item.getString("key");
                 String itemValueStr = item.isNull("value") ? "" : item.getString("value");
-                Boolean itemDisabled = item.isNull("disabled") || item.getBoolean("disabled");
+                Boolean itemDisabled = !item.isNull("disabled") && item.getBoolean("disabled");
 
                 this.querys.add(new Query(itemKeyStr, itemValueStr, itemDisabled));
+            }
+
+            try {
+                // 数据以 raw 链接为主
+                URL url = new URL(this.raw);
+                this.protocol = url.getProtocol();
+
+                // 处理 host
+                String hostStr = url.getHost();
+                this.host = new ArrayList<>(Arrays.asList(hostStr.split("\\.")));
+
+                // 处理 path
+                String pathStr = url.getFile();
+
+                // 处理 Query
+                String queryStr = url.getQuery();
+                if (queryStr != null && !queryStr.equals("")) {
+                    // 处理 raw 参数
+                    for (String queryStrItem : queryStr.split("&")) {
+                        if (queryStrItem != null && !queryStrItem.equals("")) {
+                            String[] queryStrItemArr = queryStrItem.split("=");
+                            String queryKey = "";
+                            String queryValue = "";
+                            if (queryStrItemArr.length == 1) {
+                                queryKey = queryStrItemArr[0];
+                            } else if (queryStrItemArr.length == 2) {
+                                queryKey = queryStrItemArr[0];
+                                queryValue = queryStrItemArr[1];
+                            } else if (queryStrItemArr.length > 2) {
+                                queryKey = queryStrItemArr[0];
+                                queryStrItemArr[0] = "";
+                                queryValue = String.join("", queryStrItemArr);
+                            }
+
+                            if (queryStrItemArr.length > 0) {
+                                // query 参数项数据格式正确才添加到数组中
+                                Query queryObj = new Query(queryKey, queryValue, false);
+
+                                int queryObjIndex = -1;
+                                for (int i = 0; i < this.querys.size(); i++) {
+                                    Query queryObjItem = this.querys.get(i);
+                                    if (queryObjItem != null && queryObjItem.key.equals(queryKey)) {
+                                        queryObjIndex = i;
+                                    }
+                                }
+
+                                if (queryObjIndex == -1) {
+                                    // 数组中不存在 query 参数项才添加
+                                    this.querys.add(queryObj);
+                                } else {
+                                    // 存在时需要判断参数是否相同
+                                    Query queryObjItem = this.querys.get(queryObjIndex);
+                                    if (!queryObjItem.value.equals(queryValue)) {
+                                        queryObjItem.value = queryValue;
+                                        queryObjItem.disabled = false;
+                                        this.querys.set(queryObjIndex, queryObjItem);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            } catch (MalformedURLException e) {
+                // e.printStackTrace();
+                // Log.d(TAG, "jsonObjectDecoding: ");
+            }
+
+            if (this.querys.size() > 0) {
+                ArrayList<String> queryStrList = new ArrayList<>();
+                for (Query queryItem : this.querys) {
+                    if (queryItem != null && !queryItem.disabled) {
+                        queryStrList.add(queryItem.key + "=" + queryItem.value);
+                    }
+                }
+
+                try {
+                    int portInt = 80;
+                    if (this.port != null && !this.port.equals("")) {
+                        portInt = Integer.valueOf(this.port).intValue();
+                    }
+
+                    String hostStr = String.join(".", this.host);
+                    String pathStr = String.join("/", this.path) + "?" + String.join("&", queryStrList);
+                    URL url = null;
+                    if (portInt != 80 && portInt != 443) {
+                        url = new URL(this.protocol, hostStr, portInt, pathStr);
+                    } else {
+                        url = new URL(this.protocol, hostStr, pathStr);
+                    }
+
+                    this.raw = url.toString();
+                } catch (MalformedURLException e) {
+                    // e.printStackTrace();
+                }
             }
 
             return this;
